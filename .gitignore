@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Database & Evidence Storage
+*.db
+*.sqlite3
+evidence_crops/*.jpg
+!evidence_crops/.gitkeep
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Ultralytics Weights cache
+*.pt
+yolov8*.pt

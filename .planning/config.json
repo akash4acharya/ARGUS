@@ -1,0 +1,22 @@
+{
+  "project_name": "ARGUS",
+  "version": "1.0.0",
+  "mode": "autonomous",
+  "workflow": {
+    "auto_plan": true,
+    "enforce_standards": true,
+    "quality_gates": true
+  },
+  "modules": [
+    "core.stream_reader",
+    "core.detector",
+    "core.tracker",
+    "core.homography_speed",
+    "core.hud_renderer",
+    "backend.database",
+    "backend.models",
+    "backend.worker",
+    "backend.main",
+    "static.index"
+  ]
+}

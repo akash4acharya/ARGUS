@@ -1,0 +1,51 @@
+# ARGUS CCTV Speed & Telemetry Configuration
+
+camera:
+  id: 1
+  name: "Campus Main Road - Camera 01"
+  # Accepts an RTSP stream (e.g. "rtsp://admin:pass@192.168.1.100:554/h264"),
+  # an HTTP MJPEG stream, local camera index (0), or a local video path ("sample_traffic.mp4")
+  source: 0
+  width: 1280
+  height: 720
+  speed_limit_kmh: 40.0
+
+calibration:
+  # 4-point quadrilateral on road plane in pixel coordinates:
+  # P1: Top-Left, P2: Top-Right, P3: Bottom-Right, P4: Bottom-Left
+  src_points:
+    - [480.0, 260.0]
+    - [800.0, 260.0]
+    - [1120.0, 680.0]
+    - [160.0, 680.0]
+  # Corresponding real-world metric dimensions of the calibrated rectangle
+  real_width_m: 8.0     # Metric width of the road trap (e.g. 2 lanes = 8m)
+  real_length_m: 35.0   # Metric longitudinal distance of the trap (e.g. 35m)
+
+detector:
+  model_weights: "yolov8n.pt"
+  confidence_threshold: 0.35
+  iou_threshold: 0.45
+  # COCO class IDs: 2 (car), 3 (motorcycle), 5 (bus), 7 (truck)
+  classes: [2, 3, 5, 7]
+  device: "cpu"
+
+tracker:
+  max_age: 30
+  n_init: 3
+  nms_max_overlap: 1.0
+  max_cosine_distance: 0.3
+  nn_budget: 100
+
+database:
+  url: "postgresql+asyncpg://postgres:postgres@localhost:5432/cctv_speed_db"
+  # Automatic fallback to local SQLite database if PostgreSQL connection fails
+  sqlite_fallback: true
+  sqlite_url: "sqlite+aiosqlite:///cctv_speed_local.db"
+
+storage:
+  evidence_dir: "evidence_crops"
+
+server:
+  host: "0.0.0.0"
+  port: 8000
