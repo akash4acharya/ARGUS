@@ -38,6 +38,10 @@ class SettingsSchema(BaseModel):
     source: Optional[Union[str, int]] = Field(None)
 
 
+class CameraSwitchSchema(BaseModel):
+    preset_id: str = Field(..., description="Camera preset ID to activate")
+
+
 class ViolationItemSchema(BaseModel):
     id: Optional[int] = None
     camera_id: int

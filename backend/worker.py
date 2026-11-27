@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Callable, Awaitable, List, Dict, Any, Optional
 import numpy as np
 from sqlalchemy import text
-from backend.database import AsyncSessionLocal
+import backend.database as db
 
 
 @dataclass
@@ -76,7 +76,7 @@ class AsyncViolationWorker:
 
                 # Persist to Database (PostgreSQL or local SQLite fallback)
                 try:
-                    async with AsyncSessionLocal() as session:
+                    async with db.AsyncSessionLocal() as session:
                         await session.execute(
                             text(
                                 """

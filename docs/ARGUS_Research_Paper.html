@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ARGUS: Real-Time Monocular CCTV Speed Estimation</title>
+  <style>
+    @page {
+      size: letter;
+      margin: 0.62in 0.6in 0.65in 0.6in;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Times New Roman", Times, Georgia, serif;
+      font-size: 9.5pt;
+      line-height: 1.29;
+      color: #111111;
+      margin: 0;
+      padding: 0;
+    }
+    .header-block {
+      text-align: center;
+      margin-bottom: 14pt;
+    }
+    h1.paper-title {
+      font-size: 19pt;
+      font-weight: normal;
+      line-height: 1.18;
+      margin: 0 0 12pt 0;
+      letter-spacing: -0.2px;
+    }
+    .authors-grid {
+      display: flex;
+      justify-content: center;
+      gap: 36pt;
+      margin-bottom: 8pt;
+      font-size: 9.8pt;
+    }
+    .author-card {
+      text-align: center;
+      line-height: 1.28;
+    }
+    .author-name { font-size: 10.5pt; }
+    .author-affil { font-style: italic; font-size: 9.2pt; }
+    .two-col {
+      column-count: 2;
+      column-gap: 18pt;
+      text-align: justify;
+      hyphens: auto;
+    }
+    .abstract-block {
+      margin-bottom: 8pt;
+    }
+    .abstract-lead {
+      font-weight: bold;
+      font-style: italic;
+    }
+    .index-terms {
+      margin-bottom: 10pt;
+    }
+    h2.sec-heading {
+      font-size: 10pt;
+      font-weight: normal;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin: 11pt 0 5pt 0;
+      break-after: avoid;
+    }
+    h3.subsec-heading {
+      font-size: 9.8pt;
+      font-weight: normal;
+      font-style: italic;
+      text-align: left;
+      margin: 8pt 0 3pt 0;
+      break-after: avoid;
+    }
+    p {
+      margin: 0 0 5.5pt 0;
+      text-indent: 11pt;
+    }
+    p.no-indent {
+      text-indent: 0;
+    }
+    .eq-block {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 6pt 0;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 9.5pt;
+      break-inside: avoid;
+    }
+    .eq-math {
+      flex: 1;
+      text-align: center;
+      font-style: italic;
+    }
+    .eq-num {
+      width: 24pt;
+      text-align: right;
+    }
+    .figure-box {
+      margin: 8pt 0 9pt 0;
+      text-align: center;
+      break-inside: avoid;
+    }
+    .figure-box img {
+      width: 94%;
+      height: auto;
+      border: 0.6pt solid #cccccc;
+      display: block;
+      margin: 0 auto;
+    }
+    .fig-caption {
+      font-size: 8.5pt;
+      margin-top: 4pt;
+      text-align: center;
+    }
+    .table-box {
+      margin: 8pt 0 10pt 0;
+      break-inside: avoid;
+    }
+    .table-title {
+      font-size: 8.5pt;
+      text-align: center;
+      text-transform: uppercase;
+      margin-bottom: 4pt;
+      letter-spacing: 0.3px;
+    }
+    table.ieee-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.2pt;
+      border-top: 1.2pt solid #111;
+      border-bottom: 1.2pt solid #111;
+    }
+    table.ieee-table th {
+      border-bottom: 0.8pt solid #111;
+      padding: 3.5pt 4pt;
+      text-align: left;
+      font-weight: bold;
+    }
+    table.ieee-table td {
+      padding: 2.8pt 4pt;
+      text-align: left;
+    }
+    table.ieee-table tr.row-sep td {
+      border-top: 0.5pt solid #bbb;
+    }
+    ul.refs-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 4pt 0 0 0;
+      font-size: 8.2pt;
+      line-height: 1.25;
+      text-align: left;
+    }
+    ul.refs-list li {
+      padding-left: 18pt;
+      text-indent: -18pt;
+      margin-bottom: 3.5pt;
+    }
+    code.inline-code {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 8.5pt;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-block">
+    <h1 class="paper-title">ARGUS: Real-Time Monocular CCTV Speed Estimation via Planar Homography, Least-Squares Trajectory Smoothing, and Exception-First Telemetry</h1>
+    <div class="authors-grid">
+      <div class="author-card">
+        <div class="author-name">Akash M Acharya</div>
+        <div class="author-affil">Dept. of CSE(AIML)</div>
+        <div class="author-affil">Sahyadri College of Engineering and Management</div>
+        <div class="author-affil">Mangaluru, India</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+
+    <div class="abstract-block">
+      <p class="no-indent"><span class="abstract-lead">Abstract—</span>Highway speed enforcement still runs on expensive roadside radar and LiDAR rigs, even though cities already have thousands of CCTV poles staring down at the exact same asphalt. Turning a single monocular surveillance feed into a speed gun sounds trivial until you actually try it. Perspective foreshortening stretches distances toward the horizon, tall vehicles pull bounding-box centers meters above the road plane, and buffered camera pipelines turn live telemetry into stale guesswork. This paper presents ARGUS, a software-only traffic telemetry suite that runs on pre-existing RTSP and video streams without new roadside hardware. ARGUS pairs an overhead-adapted YOLOv8n detector fine-tuned on 82,085 UA-DETRAC frames with decoupled stream ingestion, bottom-center tire-contact projection through a 3&times;3 Direct Linear Transform (DLT) homography matrix, and least-squares velocity regression over rolling trajectory windows. On 16,001 unseen UA-DETRAC validation frames, the adapted detector reaches 0.765 mAP@50 overall (0.941 on cars, 0.924 on buses) at 1.3 ms per frame on an NVIDIA Tesla T4. Locally, switching dense multi-lane tracking to a lightweight IOU path pushes throughput from 2.1 FPS to 24.8–44.2 FPS on an RTX 4060 Laptop GPU, while holding synthetic trajectory error to 0.000 km/h and matrix projection error below 1.35&times;10<sup>&minus;14</sup> m.</p>
+    </div>
+
+    <div class="index-terms">
+      <p class="no-indent"><span class="abstract-lead">Index Terms—</span>Monocular Speed Estimation, Planar Homography, YOLOv8, UA-DETRAC, Real-Time Telemetry, Computer Vision</p>
+    </div>
+
+    <h2 class="sec-heading">I. Introduction</h2>
+
+    <p>Municipal traffic authorities already own the cameras. Every major highway gantry and urban junction carries an RTSP or ONVIF video feed running twenty-four hours a day, yet speed enforcement still demands dedicated Doppler radar or roadside LiDAR installations [1].</p>
+
+    <p>The catch is simple: pixel math lies. A naive vision script that divides bounding-box pixel movement by wall-clock elapsed time fails on three fronts almost immediately. First, camera tilt compresses pixels near the horizon—one pixel of bounding-box wobble near the top of the frame easily translates to a quarter-meter jump on the road, so receding vehicles appear to accelerate as they drive away from the lens. Second, standard object detectors trained on eye-level consumer photos misread overhead silhouettes and report 2D box centers that sit on vehicle roofs rather than tires, introducing severe parallax error on buses and trucks [6]. Third, OpenCV's default FIFO capture buffer queues old frames whenever inference dips—meaning a network stall makes the vision loop calculate speed across stale timestamps rather than true packet arrival times.</p>
+
+    <p>Wait, zoom out for a second: fixing only the neural network does not fix the physics, and fixing the geometry alone breaks if the frame clock is lying. Most academic pipelines stop at offline video scripts or burn heavy feature-embedding CNNs on every detected crop [4], stalling real-time throughput the moment traffic crosses twenty vehicles per frame.</p>
+
+    <p>ARGUS solves the full chain inside one self-contained runtime. Basically, we treat the surveillance feed as a calibrated metric sensor only after three invariants hold: frame capture is decoupled from inference, every vehicle is anchored strictly at its bottom-center tire contact point on the <em>Z</em> = 0 asphalt plane, and velocity comes from least-squares regression across deduplicated frames rather than noisy endpoint differences.</p>
+
+    <p>The concrete contributions of this work are:</p>
+    <p class="no-indent">1) <em>Overhead CCTV Adaptation:</em> Converting 60 UA-DETRAC sequences (82,085 frames) via zero-copy NTFS hard links and fine-tuning YOLOv8n to 0.941 car and 0.924 bus mAP@50 [2], [3].</p>
+    <p class="no-indent">2) <em>Drift-Free Planar Physics:</em> Combining 4-point DLT homography (&lt; 10<sup>&minus;13</sup> m matrix error) with deterministic media timestamps, frame deduplication, and least-squares velocity fitting [5].</p>
+    <p class="no-indent">3) <em>Exception-First Operator Suite:</em> An interactive FastAPI + WebSocket console featuring a 1:1 pixel-locked draggable 4-corner Speed Zone, live camera switching, and asynchronous SQLite/PostgreSQL evidence persistence.</p>
+
+    <h2 class="sec-heading">II. Methodology</h2>
+
+    <p>ARGUS splits perception, geometry, rendering, and persistence across isolated execution stages so disk I/O or slow network frames never stall the 25–40 FPS inference loop (Fig. 1).</p>
+
+    <div class="figure-box">
+      <svg viewBox="0 0 340 270" width="100%" style="background:#fff; border:0.6pt solid #ccc;">
+        <defs>
+          <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#222"/>
+          </marker>
+        </defs>
+        <g font-family="Times New Roman, serif" font-size="8.2" text-anchor="middle" fill="#111">
+          <rect x="55" y="8" width="230" height="24" rx="2" fill="#f7f9fc" stroke="#222" stroke-width="0.9"/>
+          <text x="170" y="23">RTSP / MP4 Stream (UniversalCCTVStream)</text>
+
+          <line x1="170" y1="32" x2="170" y2="46" stroke="#222" stroke-width="0.9" marker-end="url(#arrow)"/>
+
+          <rect x="55" y="47" width="230" height="26" rx="2" fill="#f7f9fc" stroke="#222" stroke-width="0.9"/>
+          <text x="170" y="58">YOLOv8n Vehicle Detector (UA-DETRAC Weights)</text>
+          <text x="170" y="68" font-size="7.2" fill="#444">Classes: car (0), bus (1), others (2) | w &ge; 28px, h &ge; 24px</text>
+
+          <line x1="170" y1="73" x2="170" y2="87" stroke="#222" stroke-width="0.9" marker-end="url(#arrow)"/>
+
+          <rect x="65" y="88" width="210" height="24" rx="2" fill="#f7f9fc" stroke="#222" stroke-width="0.9"/>
+          <text x="170" y="103">Multi-Object Tracker (IOU Fast / DeepSORT)</text>
+
+          <line x1="170" y1="112" x2="170" y2="126" stroke="#222" stroke-width="0.9" marker-end="url(#arrow)"/>
+
+          <rect x="55" y="127" width="230" height="28" rx="2" fill="#eef5fc" stroke="#222" stroke-width="0.9"/>
+          <text x="170" y="139">HomographySpeedEngine (3x3 DLT + Ray-Casting Gate)</text>
+          <text x="170" y="149" font-size="7.2" fill="#444">Tire Anchor (u, v) -&gt; Least-Squares (vx, vy) + Median Filter</text>
+
+          <line x1="120" y1="155" x2="82" y2="174" stroke="#222" stroke-width="0.9" marker-end="url(#arrow)"/>
+          <line x1="220" y1="155" x2="258" y2="174" stroke="#222" stroke-width="0.9" marker-end="url(#arrow)"/>
+
+          <rect x="12" y="175" width="142" height="32" rx="2" fill="#f7f9fc" stroke="#222" stroke-width="0.9"/>
+          <text x="83" y="188">Exception-First HUD Renderer</text>
+          <text x="83" y="199" font-size="7.2" fill="#444">MJPEG Stream + 1:1 SVG Zone</text>
+
+          <rect x="186" y="175" width="142" height="32" rx="2" fill="#f7f9fc" stroke="#222" stroke-width="0.9"/>
+          <text x="257" y="188">AsyncViolationWorker Queue</text>
+          <text x="257" y="199" font-size="7.2" fill="#444">JPEG Crops + SQLite / PostgreSQL</text>
+
+          <line x1="83" y1="207" x2="140" y2="228" stroke="#222" stroke-width="0.9" marker-end="url(#arrow)"/>
+          <line x1="257" y1="207" x2="200" y2="228" stroke="#222" stroke-width="0.9" marker-end="url(#arrow)"/>
+
+          <rect x="52" y="229" width="236" height="28" rx="2" fill="#f7f9fc" stroke="#222" stroke-width="0.9"/>
+          <text x="170" y="241">Operator 3-Zone Console (FastAPI + WebSockets)</text>
+          <text x="170" y="251" font-size="7.2" fill="#444">Camera Switcher | Drag Corners P1-P4 | Violations &amp; CSV Log</text>
+        </g>
+      </svg>
+      <div class="fig-caption">Fig. 1. ARGUS end-to-end decoupled perception, planar homography, and telemetry pipeline.</div>
+    </div>
+
+    <h3 class="subsec-heading">A. Decoupled Stream Ingestion and Deterministic Timing</h3>
+
+    <p>Frame grabbing lives inside an isolated daemon thread (<code class="inline-code">UniversalCCTVStream</code>) with OpenCV's internal buffer clamped to a single frame. On RTSP streams, TCP transport and <code class="inline-code">nobuffer</code> flags strip UDP smear and decoder queues; on arrival, the reader stamps each frame immediately.</p>
+
+    <p>Here's the catch though—during testing on recorded MP4 benchmarks, wall-clock <code class="inline-code">time.monotonic()</code> exposed two subtle failures. First, the vision loop occasionally polled faster than the 25 FPS source video, ingesting duplicate <code class="inline-code">frame_id</code> frames with zero spatial change. Second, OS sleep jitter distorted <span style="font-style:italic;">&Delta;t</span> between consecutive frames. Deduplicating by <code class="inline-code">frame_id</code> inside the vision loop and switching recorded MP4 files to a deterministic media clock (<code class="inline-code">frame_id / nominal_fps</code>, exact 40.0 ms at 25 FPS) while retaining monotonic hardware clocks for live RTSP/webcams fixed both bugs at the root.</p>
+
+    <h3 class="subsec-heading">B. Overhead Vehicle Perception (UA-DETRAC Fine-Tuning)</h3>
+
+    <p>Standard COCO weights expect eye-level side profiles, whereas highway cameras stare down at hoods and roofs. We ingested the full 9.23 GB UA-DETRAC benchmark (<code class="inline-code">bratjay/ua-detrac-orig</code>) [2] and normalized all 60 annotated XML sequences—82,085 labeled frames across <code class="inline-code">car</code> (car/van &rarr; 0), <code class="inline-code">bus</code> (1), and <code class="inline-code">others</code> (2)—into YOLO ratios over [0.0, 1.0].</p>
+
+    <p>To protect a 17 GB free laptop SSD budget from duplicating 83,791 images, <code class="inline-code">organize_detrac_split.py</code> links an 80/20 sequence-disjoint split (48 train sequences / 67,790 images; 12 validation sequences / 16,001 images) using zero-copy NTFS hard links locally and Linux symlinks in the cloud. Splitting by sequence rather than random frame shuffling prevents data leakage across adjacent 25 FPS frames. In inference, boxes smaller than 28&times;24 pixels are filtered out to stop horizon noise from cluttering the HUD.</p>
+
+    <h3 class="subsec-heading">C. High-FPS Multi-Object Association</h3>
+
+    <p>DeepSORT with a MobileNet appearance embedder [4] tracks occluded targets well, but running per-crop CNN inference on 20–70 simultaneous highway cars acts like a slow toll booth in front of the entire pipeline. On an RTX 4060 Laptop GPU, CPU MobileNet dropped throughput to 2.1 FPS (443.7 ms/frame), and even GPU-pinned MobileNet stayed at 5.5 FPS (180.3 ms/frame)—causing the Kalman filter to lose fast vehicles between ticks. Exposing a <code class="inline-code">use_embedder</code> flag lets dense multi-lane deployments switch to spatial IOU association (<code class="inline-code">SimpleFallbackTracker</code>), lifting pipeline throughput past 24.8 FPS live and 44.2 FPS raw.</p>
+
+    <h3 class="subsec-heading">D. Tire-Contact Ground Projection and Least-Squares Physics</h3>
+
+    <p>Rather than projecting bounding-box centers, ARGUS anchors every vehicle at its bottom-center tire contact pixel <em>(u, v) = ((x<sub>1</sub> + x<sub>2</sub>)/2, y<sub>2</sub>)</em>, pinning measurements to the <em>Z</em> = 0 asphalt plane. Four operator-placed corners (<em>P</em><sub>1</sub>..<em>P</em><sub>4</sub>) map via a 3&times;3 homography matrix <em>H</em> to real-world metric coordinates (<em>W</em>, <em>L</em>) in meters [5]:</p>
+
+    <div class="eq-block">
+      <div class="eq-math">[X, Y, 1]<sup>T</sup> &sim; H &middot; [u, v, 1]<sup>T</sup></div>
+      <div class="eq-num">(1)</div>
+    </div>
+
+    <p>Only anchors passing a ray-casting point-in-polygon check enter a 15-frame trajectory deque (requiring <em>N</em> &ge; 8 samples). Early versions divided endpoint displacement by total elapsed time, which amplified perspective foreshortening whenever a vehicle neared the top horizon edge <em>P</em><sub>1</sub>–<em>P</em><sub>2</sub>—making speed climb steadily as cars moved away. Replacing endpoint subtraction with ordinary least-squares linear velocity regression across all <em>N</em> samples in the window:</p>
+
+    <div class="eq-block">
+      <div class="eq-math" style="font-size:8.9pt;">v<sub>x</sub> = &Sigma;(t<sub>i</sub>&minus;t&#772;)(X<sub>i</sub>&minus;X&#772;)/&Sigma;(t<sub>i</sub>&minus;t&#772;)<sup>2</sup>, &nbsp; v = 3.6&radic;(v<sub>x</sub><sup>2</sup>+v<sub>y</sub><sup>2</sup>)</div>
+      <div class="eq-num">(2)</div>
+    </div>
+
+    <p>followed by a 5-sample median filter and a 220 km/h physical anomaly cap, suppresses endpoint noise by &radic;<em>N</em> and keeps speeds flat from entry to exit.</p>
+
+    <h3 class="subsec-heading">E. Exception-First HUD and Non-Blocking Persistence</h3>
+
+    <p>Dense traffic screens fail operators when every compliant sedan shouts for attention. ARGUS renders nominal cars with muted emerald (#10B981) 20% corner brackets, switches to full amber (#F59E0B) at &ge; 85% of the limit, and escalates to solid crimson (#EF4444) at &ge; 100%, keeping a 5 px rose tire dot (#F43F5E) under every vehicle. Speeding events enqueue into an <code class="inline-code">asyncio.Queue</code> worker (15 s per-track cooldown) that writes JPEG crops to disk, inserts rows into PostgreSQL with automatic local SQLite fallback, and pushes JSON alerts over WebSockets without blocking frame encoding.</p>
+
+    <h2 class="sec-heading">III. Results</h2>
+
+    <h3 class="subsec-heading">A. Overhead CCTV Detection Performance</h3>
+
+    <p>Fine-tuning YOLOv8n (129 layers, 3.01M parameters, 8.2 GFLOPs) for 30 epochs on a Kaggle Tesla T4 (14,912 MiB VRAM, batch 32, AMP FP16) converged cleanly in 5.413 hours across 67,790 training frames. Note that Kaggle's remote FUSE storage throttled reads to 2.1 MB/s; locally on NVMe SSD with an RTX 4060, 6-epoch transfer fine-tuning at 25% frame fraction reached 0.565 mAP@50 in ~20 minutes and lifted detections on the <code class="inline-code">sample_traffic.mp4</code> smoke clip by 3.25&times; (52 detections vs. 16 from baseline COCO weights over 120 frames). Table I reports the full 30-epoch validation metrics across all 16,001 unseen frames (124,562 instances).</p>
+
+    <div class="table-box">
+      <div class="table-title">Table I. UA-DETRAC Validation Results (30-Epoch Best Checkpoint)</div>
+      <table class="ieee-table">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Images</th>
+            <th>Instances</th>
+            <th>Precision</th>
+            <th>Recall</th>
+            <th>mAP@50</th>
+            <th>mAP@50-95</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-sep">
+            <td><strong>All</strong></td>
+            <td>16,001</td>
+            <td>124,562</td>
+            <td>0.792</td>
+            <td>0.728</td>
+            <td><strong>0.765</strong></td>
+            <td>0.600</td>
+          </tr>
+          <tr>
+            <td>Car</td>
+            <td>15,079</td>
+            <td>112,239</td>
+            <td>0.875</td>
+            <td>0.913</td>
+            <td><strong>0.941</strong></td>
+            <td>0.708</td>
+          </tr>
+          <tr>
+            <td>Bus</td>
+            <td>8,683</td>
+            <td>11,498</td>
+            <td>0.835</td>
+            <td>0.895</td>
+            <td><strong>0.924</strong></td>
+            <td>0.785</td>
+          </tr>
+          <tr>
+            <td>Others</td>
+            <td>825</td>
+            <td>825</td>
+            <td>0.664</td>
+            <td>0.377</td>
+            <td>0.431</td>
+            <td>0.308</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Notably, transfer learning already hit 0.753 mAP@50 at Epoch 1 and peaked at 0.766 at Epochs 23 and 25, while Tesla T4 FP16 validation ran at 1.3 ms inference per image. The lower <code class="inline-code">others</code> score reflects label scarcity—825 total instances (&lt; 0.7% of validation objects) spread across mixed utility vehicles.</p>
+
+    <h3 class="subsec-heading">B. Planar Homography Precision and Jitter Rejection</h3>
+
+    <p>Standalone verification (<code class="inline-code">test_homography.py</code>) confirms exact DLT inversion and steady physics under noise (Table II). Forward corner projection error stays at 1.353&times;10<sup>&minus;14</sup> m, inverse pixel reprojection error reads 0.000 px, and a simulated 60.00 km/h vehicle is recovered at exactly 60.00 km/h (0.000 km/h error). Injecting &plusmn;1.5 px uniform bounding-box jitter onto a 50.0 km/h trajectory yields a mean of 48.94 km/h with a standard deviation of 1.76 km/h.</p>
+
+    <div class="table-box">
+      <div class="table-title">Table II. Physics Precision and Live Throughput Benchmarks</div>
+      <table class="ieee-table">
+        <thead>
+          <tr>
+            <th>Benchmark / Metric</th>
+            <th>Observed Result</th>
+            <th>Hardware / Condition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-sep">
+            <td>DLT Forward / Inverse Error</td>
+            <td>1.353&times;10<sup>&minus;14</sup> m / 0.000 px</td>
+            <td>4-Point Trapezoid (CPU)</td>
+          </tr>
+          <tr>
+            <td>Simulated 60 km/h Trajectory</td>
+            <td>60.00 km/h (0.000 err)</td>
+            <td>Least-Squares + Median</td>
+          </tr>
+          <tr>
+            <td>&plusmn;1.5 px Jitter on 50 km/h</td>
+            <td>48.94 &plusmn; 1.76 km/h</td>
+            <td>15-Frame Window</td>
+          </tr>
+          <tr class="row-sep">
+            <td>CPU MobileNet DeepSORT</td>
+            <td>2.1 FPS (443.7 ms)</td>
+            <td>6-Lane Expressway (70 trks)</td>
+          </tr>
+          <tr>
+            <td>GPU MobileNet DeepSORT</td>
+            <td>5.5 FPS (180.3 ms)</td>
+            <td>RTX 4060 (21 trks)</td>
+          </tr>
+          <tr>
+            <td>Fast IOU Tracker (Live API)</td>
+            <td><strong>24.8 FPS</strong> (44.2 FPS raw)</td>
+            <td>RTX 4060, &Delta;t = 40.0 ms</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsec-heading">C. Live Multi-Lane Runtime and Throughput</h3>
+
+    <p>Converting local UA-DETRAC sequences into 25 FPS MP4 streams lets us stress-test ARGUS on both a 6-lane divided expressway (<code class="inline-code">MVI_40191</code>, Fig. 2) and an unseen 8-lane urban intersection (<code class="inline-code">MVI_40712</code>, Fig. 3). On the 6-lane expressway at 24.8 FPS (&Delta;t = 40.0 ms), ARGUS simultaneously tracks ~20 vehicles across both carriageways and cleanly separates nominal traffic (36.2–39.1 km/h), warnings (46.5 km/h at a 50 km/h limit), and violations (71.5–75.8 km/h). Switching live via <code class="inline-code">POST /api/camera</code> to the unseen urban intersection runs at 24.7 FPS and tracks steady 27.1–28.6 km/h cross-traffic while ignoring pedestrians.</p>
+
+    <div class="figure-box">
+      <img src="paper_assets/fig2_expressway_hud.jpg" alt="6-Lane Expressway Exception-First HUD">
+      <div class="fig-caption">Fig. 2. Live 6-lane expressway inference (<code class="inline-code">MVI_40191</code>) showing green corner brackets (36.2–38.7 km/h), amber warning (46.5 km/h), and crimson violation (71.5 km/h) on a 50 km/h limit.</div>
+    </div>
+
+    <div class="figure-box">
+      <img src="paper_assets/fig3_urban_arterial.jpg" alt="8-Lane Unseen Urban Arterial">
+      <div class="fig-caption">Fig. 3. Generalization on an unseen 8-lane urban intersection (<code class="inline-code">MVI_40712</code>) at 24.7 FPS, tracking vehicle #2383 steadily at 27.1 km/h while ignoring pedestrians.</div>
+    </div>
+
+    <h3 class="subsec-heading">D. Interactive Zone Calibration and Audit Telemetry</h3>
+
+    <p>An early UI bug stretched the calibration SVG over a letterboxed container, offsetting draggable corner handles from the video pixels. Locking both <code class="inline-code">#cctvStream</code> and <code class="inline-code">#calibrationSvg</code> inside a strict 16:9 wrapper and keeping the four corner grips (<em>P</em><sub>1</sub>–<em>P</em><sub>4</sub>) always interactive directly over the footage (Fig. 4) allows instant live recalibration with zero restart. On the audit side, replacing cramped raw cards with a two-tab panel—<em>Violations</em> (with click-to-zoom crops backed by SQLite persistence, verified at 14 stored rows during a live run) and <em>Live Log</em> (tabular per-vehicle telemetry with one-click CSV export)—makes enforcement logs immediately readable.</p>
+
+    <div class="figure-box">
+      <img src="paper_assets/fig4_calibration_zone.jpg" alt="Interactive 4-Point Calibration Zone">
+      <div class="fig-caption">Fig. 4. Calibrated 4-point Speed Zone (<em>P</em><sub>1</sub>–<em>P</em><sub>4</sub>) mapped onto three highway lanes (<em>W</em> = 10.5 m, <em>L</em> = 28.0 m) capturing vehicle #239 at 84.7 km/h.</div>
+    </div>
+
+    <h2 class="sec-heading">IV. Discussion</h2>
+
+    <p>Several practical engineering lessons fell out during integration. First, we caught a subtle Python import-binding bug in <code class="inline-code">backend/worker.py</code>: importing <code class="inline-code">AsyncSessionLocal</code> by value at module load kept pointing the background worker at an offline PostgreSQL pool even after <code class="inline-code">init_db()</code> reassigned the module variable to SQLite. Referencing the database module dynamically resolved the silent write failures immediately—we caught it in local testing itself before any live run.</p>
+
+    <p>Second, hardware telemetry depends heavily on feeding the right clock to the right stream. Monotonic wall-clock arrival stamps are essential for live jittery RTSP links, whereas recorded benchmark MP4s need deterministic frame indices so scheduler delays never mimic vehicle acceleration. Finally, three honest limitations remain: speed accuracy depends on operators entering accurate metric width and length for the 4-point road trap (visual validation against LiDAR ground truth such as BrnoCompSpeed [1] is queued next), fast IOU association trades appearance re-identification under heavy cross-lane occlusion for 44 FPS speed, and the UA-DETRAC taxonomy omits Indian regional vehicle classes such as auto-rickshaws and dense two-wheelers.</p>
+
+    <h2 class="sec-heading">V. Conclusion</h2>
+
+    <p>Hardware is rarely the hardest bottleneck in smart-city infrastructure; geometry and timing discipline are. Existing roadside cameras already hold enough visual signal to measure vehicle velocity in meters per second, provided the software stops trusting bounding-box centers, fixes camera buffer clocks, and lets operators anchor the ground plane directly on the live feed. ARGUS turns that thesis into a 25–40 FPS operational console with verifiable DLT math and auditable evidence logs. The real shift is simple: instead of mounting new radar poles at every junction, traffic enforcement becomes a software calibration layer over the glass already hanging above the road.</p>
+
+    <h2 class="sec-heading">Acknowledgment</h2>
+
+    <p>The author thanks the maintainers of the UA-DETRAC benchmark, Ultralytics, and the Sahyadri College of Engineering and Management Dept. of CSE(AIML) for computational and academic support.</p>
+
+    <h2 class="sec-heading">References</h2>
+
+    <ul class="refs-list">
+      <li>[1] J. Sochor, R. Jur&aacute;nek, J. &Scaron;pa&#328;hel, L. Mar&scaron;&iacute;k, A. &Scaron;irok&yacute;, A. Herout, and P. Zem&#269;&iacute;k, &ldquo;Comprehensive Data Set for Automatic Single Camera Visual Speed Measurement,&rdquo; <em>IEEE Transactions on Intelligent Transportation Systems</em>, vol. 19, no. 5, pp. 1633&ndash;1643, May 2018.</li>
+      <li>[2] L. Wen, D. Du, Z. Cai, Z. Lei, M.-C. Chang, H. Qi, J. Lim, M.-H. Yang, and S. Lyu, &ldquo;UA-DETRAC: A New Benchmark and Protocol for Multi-Object Detection and Tracking,&rdquo; <em>Computer Vision and Image Understanding</em>, vol. 193, p. 102907, 2020.</li>
+      <li>[3] G. Jocher, A. Chaurasia, and J. Qiu, &ldquo;Ultralytics YOLOv8 (Version 8.0.0),&rdquo; 2023. [Online]. Available: https://github.com/ultralytics/ultralytics</li>
+      <li>[4] N. Wojke, A. Bewley, and D. Paulus, &ldquo;Simple Online and Realtime Tracking with a Deep Association Metric,&rdquo; in <em>2017 IEEE International Conference on Image Processing (ICIP)</em>, Beijing, China, 2017, pp. 3645&ndash;3649.</li>
+      <li>[5] R. Hartley and A. Zisserman, <em>Multiple View Geometry in Computer Vision</em>, 2nd ed. Cambridge, UK: Cambridge University Press, 2003.</li>
+      <li>[6] &ldquo;Vehicle Speed Estimation Using Consecutive Frame Approaches and Deep Image Homography for Image Rectification on Monocular Videos,&rdquo; <em>IEEE Access</em>, 2024.</li>
+    </ul>
+
+  </div>
+
+</body>
+</html>

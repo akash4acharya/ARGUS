@@ -120,16 +120,19 @@ class DeepSORTVehicleTracker:
         nms_max_overlap: float = 1.0,
         max_cosine_distance: float = 0.3,
         nn_budget: int = 100,
+        use_embedder: bool = True,
     ):
         self.max_age = max_age
         self.n_init = n_init
         self.nms_max_overlap = nms_max_overlap
         self.max_cosine_distance = max_cosine_distance
         self.nn_budget = nn_budget
+        self.use_embedder = use_embedder
         self.deepsort = None
         self.fallback_tracker = SimpleFallbackTracker(max_missed=max_age)
 
-        self._init_tracker()
+        if self.use_embedder:
+            self._init_tracker()
 
     def _init_tracker(self) -> None:
         try:

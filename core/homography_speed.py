@@ -109,16 +109,25 @@ class HomographySpeedEngine:
         if len(traj) < self.min_samples:
             return None
 
-        t_start, x_start, y_start = traj[0]
-        t_end, x_end, y_end = traj[-1]
-        delta_t = t_end - t_start
+        times = np.array([pt[0] for pt in traj], dtype=np.float64)
+        xs = np.array([pt[1] for pt in traj], dtype=np.float64)
+        ys = np.array([pt[2] for pt in traj], dtype=np.float64)
 
+        delta_t = float(times[-1] - times[0])
         # Require a minimum duration to avoid division-by-zero or extreme short-baseline noise
         if delta_t <= 0.08:
             return None
 
-        displacement_m = float(np.hypot(x_end - x_start, y_end - y_start))
-        instant_kmh = (displacement_m / delta_t) * 3.6
+        # Least-squares linear velocity fit across all samples in window to suppress
+        # perspective-amplified endpoint jitter near the horizon.
+        t_centered = times - np.mean(times)
+        denom = float(np.dot(t_centered, t_centered))
+        if denom <= 1e-9:
+            return None
+
+        vx = float(np.dot(t_centered, xs - np.mean(xs)) / denom)
+        vy = float(np.dot(t_centered, ys - np.mean(ys)) / denom)
+        instant_kmh = float(np.hypot(vx, vy) * 3.6)
 
         # Reject physically impossible glitch readings (> 220 km/h on campus/urban roads)
         if instant_kmh > 220.0 or instant_kmh < 0.0:

@@ -115,9 +115,12 @@ class UniversalCCTVStream:
 
                 with self._lock:
                     self._frame_counter += 1
+                    # For pre-recorded MP4 files, use deterministic video clock so OS/CPU jitter
+                    # never artificially compresses delta_t or inflates measured speeds.
+                    frame_ts = (self._frame_counter / nominal_fps) if is_local_file else arrival_timestamp
                     self._latest_frame = TimestampedFrame(
                         frame_id=self._frame_counter,
-                        capture_time=arrival_timestamp,
+                        capture_time=frame_ts,
                         image=raw_bgr,
                     )
 

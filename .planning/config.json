@@ -18,5 +18,8 @@
     "backend.worker",
     "backend.main",
     "static.index"
-  ]
+  ],
+  "graphify": {
+    "enabled": true
+  }
 }

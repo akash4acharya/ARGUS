@@ -163,14 +163,15 @@ class ExceptionFirstHudRenderer:
 
         pill_x1 = max(4, x1)
         pill_y2 = max(text_h + 10, y1 - 6)
-        pill_y1 = pill_y2 - text_h - 8
-        pill_x2 = pill_x1 + text_w + 14
+        pill_y1 = max(0, pill_y2 - text_h - 8)
+        pill_x2 = min(frame.shape[1] - 1, pill_x1 + text_w + 14)
 
-        # Pill background with alpha = 0.75
-        overlay = frame.copy()
-        cv2.rectangle(overlay, (pill_x1, pill_y1), (pill_x2, pill_y2), COLOR_SURFACE_PRIMARY, -1)
-        cv2.rectangle(overlay, (pill_x1, pill_y1), (pill_x2, pill_y2), color, 1)
-        cv2.addWeighted(overlay, 0.75, frame, 0.25, 0, frame)
+        # Blend only the local pill ROI instead of copying the full 720p frame per vehicle
+        if pill_x2 > pill_x1 and pill_y2 > pill_y1:
+            roi = frame[pill_y1:pill_y2, pill_x1:pill_x2]
+            pill_bg = np.full_like(roi, COLOR_SURFACE_PRIMARY)
+            cv2.addWeighted(pill_bg, 0.75, roi, 0.25, 0, roi)
+            cv2.rectangle(frame, (pill_x1, pill_y1), (pill_x2, pill_y2), color, 1)
 
         # Text rendering
         text_origin = (pill_x1 + 7, pill_y2 - 5)
@@ -193,12 +194,14 @@ class ExceptionFirstHudRenderer:
         src_points: List[List[float]],
         vehicles: List[TrackedVehicle],
         speed_map: dict[int, Optional[float]],
+        draw_zone: bool = True,
     ) -> np.ndarray:
         """
         Complete frame rendering pipeline.
         """
-        # Draw calibration polygon first (underneath vehicles)
-        self.draw_calibration_polygon(frame, src_points)
+        # Optionally draw calibration polygon underneath vehicles
+        if draw_zone:
+            self.draw_calibration_polygon(frame, src_points)
 
         # Draw each vehicle
         for v in vehicles:

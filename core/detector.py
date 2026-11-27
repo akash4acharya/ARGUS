@@ -80,9 +80,16 @@ class YOLOv8VehicleDetector:
                     conf = float(box.conf[0].cpu().numpy())
                     cls_id = int(box.cls[0].cpu().numpy())
 
-                    class_name = COCO_VEHICLE_CLASSES.get(cls_id, "VEHICLE")
+                    if self.model is not None and hasattr(self.model, "names") and isinstance(self.model.names, dict) and cls_id in self.model.names:
+                        class_name = str(self.model.names[cls_id]).upper()
+                    else:
+                        class_name = COCO_VEHICLE_CLASSES.get(cls_id, "VEHICLE")
                     w = max(0.0, x2 - x1)
                     h = max(0.0, y2 - y1)
+
+                    # Skip tiny distant horizon specks to keep multi-lane HUD clean
+                    if w < 28.0 or h < 24.0:
+                        continue
 
                     # DeepSORT expects [left, top, width, height]
                     detections.append(([x1, y1, w, h], conf, class_name))

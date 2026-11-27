@@ -19,14 +19,9 @@
       --status-warning: #F59E0B;
       --status-violation: #EF4444;
       --calibration-zone: #38BDF8;
-      --tire-anchor: #F43F5E;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg-primary);
@@ -38,272 +33,70 @@
       flex-direction: column;
     }
 
-    /* Monospace telemetry enforcement */
     .mono {
       font-family: 'JetBrains Mono', monospace;
       font-variant-numeric: tabular-nums;
     }
 
-    /* Zone A: Top Telemetry Bar (64px height) */
+    /* Zone A: Top Telemetry Bar */
     .telemetry-bar {
-      height: 64px;
-      min-height: 64px;
-      background-color: rgba(22, 30, 46, 0.85);
+      height: 60px;
+      min-height: 60px;
+      background-color: rgba(22, 30, 46, 0.92);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
+      padding: 0 20px;
+      gap: 12px;
       z-index: 100;
     }
 
-    .brand-section {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .brand-section { display: flex; align-items: center; gap: 10px; }
     .brand-logo {
-      width: 28px;
-      height: 28px;
+      width: 28px; height: 28px;
       background: linear-gradient(135deg, #38BDF8 0%, #2563EB 100%);
       border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 14px;
-      color: #FFFFFF;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px; color: #FFFFFF;
       box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
     }
+    .brand-title { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+    .brand-subtitle { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-    .brand-title {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      color: var(--text-main);
-    }
-
-    .brand-subtitle {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .metrics-group {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
+    .metrics-group { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
     .metric-pill {
-      background-color: rgba(11, 15, 23, 0.6);
+      background-color: rgba(11, 15, 23, 0.7);
       border: 1px solid var(--border-subtle);
       border-radius: 6px;
-      padding: 6px 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      padding: 5px 10px;
+      display: flex; align-items: center; gap: 6px;
+      white-space: nowrap;
     }
-
-    .metric-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .metric-value {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .stream-status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+    .metric-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+    .metric-value { font-size: 12px; font-weight: 700; color: var(--text-main); }
 
     .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
+      width: 8px; height: 8px; border-radius: 50%;
       background-color: var(--status-nominal);
       box-shadow: 0 0 8px var(--status-nominal);
       animation: pulse 2s infinite;
     }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.4; }
-      100% { opacity: 1; }
-    }
+    .controls-group { display: flex; align-items: center; gap: 10px; }
 
-    .controls-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .btn {
-      background-color: var(--bg-card);
+    .camera-select {
+      background: #0B0F17;
       color: var(--text-main);
-      border: 1px solid var(--border-subtle);
+      border: 1px solid var(--calibration-zone);
       border-radius: 6px;
-      padding: 8px 14px;
+      padding: 6px 10px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-    }
-
-    .btn:hover {
-      background-color: #334155;
-      border-color: #475569;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #0284C7 0%, #2563EB 100%);
-      border: none;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #0369A1 0%, #1D4ED8 100%);
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
-    }
-
-    .btn-active {
-      background-color: var(--calibration-zone) !important;
-      color: #0B0F17 !important;
-      border-color: var(--calibration-zone) !important;
-      font-weight: 700;
-    }
-
-    /* Main Container: 70% Video Canvas, 30% Violation Audit Feed */
-    .main-workspace {
-      flex: 1;
-      display: flex;
-      height: calc(100vh - 64px);
-      overflow: hidden;
-    }
-
-    /* Zone B: Primary Video Canvas (70% width) */
-    .video-viewport {
-      width: 70%;
-      height: 100%;
-      background-color: #000000;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      border-right: 1px solid var(--border-subtle);
-    }
-
-    .video-canvas-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      max-width: 100%;
-      max-height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #cctvStream {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      user-select: none;
-      pointer-events: none;
-    }
-
-    #calibrationSvg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 20;
-    }
-
-    #calibrationSvg.interactive {
-      pointer-events: auto;
-    }
-
-    .calib-handle {
-      cursor: grab;
-      fill: var(--calibration-zone);
-      stroke: #FFFFFF;
-      stroke-width: 2px;
-      transition: r 0.15s ease;
-    }
-
-    .calib-handle:hover, .calib-handle.dragging {
-      cursor: grabbing;
-      r: 9;
-      fill: #FFFFFF;
-      stroke: var(--calibration-zone);
-    }
-
-    .calib-poly {
-      fill: rgba(56, 189, 248, 0.20);
-      stroke: var(--calibration-zone);
-      stroke-width: 2px;
-      stroke-dasharray: 6 3;
-    }
-
-    .calib-label {
-      fill: #FFFFFF;
-      font-size: 12px;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-      pointer-events: none;
-    }
-
-    .canvas-hud-banner {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      background: rgba(11, 15, 23, 0.85);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      padding: 8px 14px;
-      z-index: 30;
-      font-size: 12px;
-      display: flex;
-      gap: 16px;
-    }
-
-    .calib-modal {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(22, 30, 46, 0.95);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--calibration-zone);
-      border-radius: 8px;
-      padding: 14px 20px;
-      display: none;
-      align-items: center;
-      gap: 16px;
-      z-index: 50;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-    }
-
-    .calib-modal.visible {
-      display: flex;
+      outline: none;
     }
 
     .input-field {
@@ -311,16 +104,163 @@
       border: 1px solid var(--border-subtle);
       border-radius: 4px;
       color: #FFFFFF;
-      padding: 6px 10px;
+      padding: 4px 8px;
       font-size: 12px;
-      width: 70px;
+      width: 60px;
       text-align: center;
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Zone C: Live Violation Audit Feed (30% width) */
-    .violation-audit-panel {
-      width: 30%;
+    .btn {
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .btn:hover { background-color: #334155; border-color: #475569; }
+    .btn-primary { background: linear-gradient(135deg, #0284C7 0%, #2563EB 100%); border: none; color: #fff; }
+    .btn-primary:hover { background: linear-gradient(135deg, #0369A1 0%, #1D4ED8 100%); }
+
+    /* Main 3-Zone Workspace */
+    .main-workspace {
+      flex: 1;
+      display: flex;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+    }
+
+    /* Zone B: Primary Video Canvas (68% width) */
+    .video-viewport {
+      width: 68%;
+      height: 100%;
+      background-color: #05070B;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 12px 58px 12px;
+      border-right: 1px solid var(--border-subtle);
+    }
+
+    /* Tight 16:9 wrapper guarantees 1:1 SVG pixel alignment with 1280x720 video */
+    .video-stage {
+      position: relative;
+      width: 100%;
+      max-height: 100%;
+      aspect-ratio: 16 / 9;
+      max-width: calc((100vh - 130px) * 16 / 9);
+      background: #000;
+      border: 1px solid #1E293B;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    #cctvStream {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: fill;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    #calibrationSvg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: auto;
+      z-index: 20;
+    }
+
+    .calib-poly {
+      fill: rgba(56, 189, 248, 0.14);
+      stroke: var(--calibration-zone);
+      stroke-width: 2.5px;
+      pointer-events: none;
+    }
+
+    .calib-hit {
+      fill: transparent;
+      cursor: grab;
+    }
+    .calib-hit:hover { fill: rgba(56, 189, 248, 0.18); }
+    .calib-hit.dragging { cursor: grabbing; }
+
+    .calib-handle {
+      fill: var(--calibration-zone);
+      stroke: #FFFFFF;
+      stroke-width: 2.5px;
+      pointer-events: none;
+      transition: r 0.12s ease;
+    }
+    .calib-handle.dragging {
+      fill: #F59E0B;
+      r: 11;
+    }
+
+    .calib-label-bg {
+      fill: rgba(11, 15, 23, 0.85);
+      stroke: rgba(56, 189, 248, 0.5);
+      stroke-width: 1px;
+      pointer-events: none;
+    }
+
+    .calib-label {
+      fill: #F8FAFC;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      pointer-events: none;
+    }
+
+    /* Compact always-available calibration toolbar at bottom of Zone B */
+    .calib-toolbar {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(22, 30, 46, 0.94);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 40;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .calib-hint {
+      color: var(--calibration-zone);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .save-toast {
+      font-size: 11px;
+      color: var(--status-nominal);
+      font-weight: 700;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .save-toast.show { opacity: 1; }
+
+    /* Zone C: 2-Tab Audit & Logs Panel (32% width) */
+    .audit-panel {
+      width: 32%;
       height: 100%;
       background-color: var(--bg-elevated);
       display: flex;
@@ -328,40 +268,56 @@
       overflow: hidden;
     }
 
-    .panel-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border-subtle);
+    .panel-tabs {
       display: flex;
       align-items: center;
       justify-content: space-between;
-    }
-
-    .panel-title {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-subtle);
       gap: 8px;
     }
 
-    .violation-badge {
-      background-color: var(--status-violation);
-      color: #FFFFFF;
-      font-size: 11px;
+    .tab-group { display: flex; gap: 6px; }
+    .tab-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
       font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 12px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .tab-btn.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border-color: var(--border-subtle);
     }
 
-    .violation-stack {
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: #334155;
+      color: #F8FAFC;
+    }
+    .badge-red { background: var(--status-violation); }
+
+    .tab-content {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      display: none;
+      flex-direction: column;
+    }
+    .tab-content.active { display: flex; }
+
+    .violation-stack {
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .violation-card {
@@ -371,118 +327,91 @@
       border-radius: 8px;
       overflow: hidden;
       display: flex;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: slideIn 0.25s ease;
     }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
     .card-crop-container {
-      width: 100px;
-      min-width: 100px;
-      height: 90px;
-      background-color: #000000;
-      position: relative;
+      width: 96px; min-width: 96px; height: 84px;
+      background: #000;
+      cursor: zoom-in;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
     }
-
-    .card-crop-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    .card-crop-container img { width: 100%; height: 100%; object-fit: cover; }
 
     .card-details {
       flex: 1;
-      padding: 10px 12px;
+      padding: 8px 12px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-
-    .card-top {
+    .card-top, .card-bottom {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
+      font-size: 11px;
     }
-
+    .card-track-id { font-weight: 700; color: var(--text-main); }
     .card-vehicle-class {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 6px; border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15); color: var(--calibration-zone);
+    }
+    .card-measured-speed { font-size: 18px; font-weight: 700; color: var(--status-violation); }
+    .card-speed-limit { font-size: 11px; color: var(--text-muted); margin-left: 6px; }
+    .excess-badge { color: var(--status-warning); font-weight: 700; font-size: 10px; }
+
+    /* Live Telemetry Log Table */
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .log-table th {
+      position: sticky;
+      top: 0;
+      background: #0F172A;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 8px 10px;
       font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      color: #94A3B8;
       text-transform: uppercase;
-      background-color: rgba(255, 255, 255, 0.08);
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .log-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.45);
+      white-space: nowrap;
+    }
+    .log-table tr:hover { background: rgba(30, 41, 59, 0.5); }
+
+    .status-pill {
+      display: inline-block;
       padding: 2px 6px;
       border-radius: 4px;
-    }
-
-    .card-track-id {
-      font-size: 11px;
-      font-weight: 600;
-      color: #E2E8F0;
-    }
-
-    .card-speed-row {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin: 4px 0;
-    }
-
-    .card-measured-speed {
-      font-size: 20px;
-      font-weight: 800;
-      color: var(--status-violation);
-    }
-
-    .card-speed-limit {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .card-bottom {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       font-size: 10px;
-      color: #64748B;
+      font-weight: 700;
     }
-
-    .excess-badge {
-      color: var(--status-warning);
-      font-weight: 600;
-      font-size: 10px;
-    }
+    .pill-NOMINAL { background: rgba(16, 185, 129, 0.15); color: var(--status-nominal); }
+    .pill-WARNING { background: rgba(245, 158, 11, 0.18); color: var(--status-warning); }
+    .pill-VIOLATION { background: rgba(239, 68, 68, 0.2); color: var(--status-violation); }
 
     .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: #64748B;
-      gap: 12px;
-      text-align: center;
-      padding: 20px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 40px 20px; color: #64748B; gap: 10px; text-align: center; font-size: 12px;
     }
 
-    .empty-icon {
-      font-size: 32px;
-      opacity: 0.5;
+    /* Evidence Zoom Lightbox */
+    .lightbox {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+      display: none; align-items: center; justify-content: center;
+      z-index: 999; cursor: zoom-out;
     }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 80vw; max-height: 80vh; border: 2px solid var(--status-violation); border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -493,7 +422,7 @@
       <div class="brand-logo">A</div>
       <div>
         <div class="brand-title">ARGUS CCTV</div>
-        <div class="brand-subtitle">Telemetry & Speed Suite</div>
+        <div class="brand-subtitle">Telemetry &amp; Speed Suite</div>
       </div>
     </div>
 
@@ -505,209 +434,192 @@
       </div>
 
       <div class="metric-pill">
-        <span class="metric-label">Rate:</span>
-        <span class="metric-value mono" id="fpsReadout">30.0 FPS</span>
+        <span class="metric-label">FPS:</span>
+        <span class="metric-value mono" id="fpsReadout">--</span>
       </div>
 
       <div class="metric-pill">
-        <span class="metric-label">Delta:</span>
-        <span class="metric-value mono" id="deltaReadout">33.3 ms</span>
+        <span class="metric-label">Δt:</span>
+        <span class="metric-value mono" id="deltaReadout">-- ms</span>
       </div>
 
       <div class="metric-pill">
         <span class="metric-label">Limit:</span>
-        <input type="number" id="speedLimitInput" class="input-field mono" value="40" min="10" max="150" step="5" style="width: 55px; height: 24px; padding: 0 4px;">
+        <input type="number" id="speedLimitInput" class="input-field mono" value="50" min="10" max="150" step="5" style="width: 52px;">
         <span class="metric-label">km/h</span>
       </div>
     </div>
 
     <div class="controls-group">
-      <button class="btn" id="recalibrateBtn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-          <polyline points="2 17 12 22 22 17"></polyline>
-          <polyline points="2 12 12 17 22 12"></polyline>
-        </svg>
-        Recalibrate 4-Point Grid
-      </button>
-      <button class="btn btn-primary" id="exportAuditBtn">Export Log</button>
+      <select id="cameraPresetSelect" class="camera-select" title="Switch Live Camera Feed">
+        <option value="highway_expressway">6-Lane Expressway (MVI_40191)</option>
+        <option value="urban_arterial">8-Lane Urban Intersection (MVI_40712)</option>
+        <option value="overhead_closeup">Close-Up Overhead (Sample)</option>
+      </select>
+      <a class="btn btn-primary" href="/api/logs/export.csv" download="argus_speed_log.csv">Export CSV</a>
     </div>
   </header>
 
   <!-- Main 3-Zone Workspace -->
   <main class="main-workspace">
 
-    <!-- Zone B: Primary Video Canvas -->
+    <!-- Zone B: Primary Video Canvas (1:1 Pixel-Locked Speed Zone) -->
     <section class="video-viewport">
-      <div class="video-canvas-container" id="videoContainer">
-        <!-- Live MJPEG Stream -->
+      <div class="video-stage">
         <img id="cctvStream" src="/api/stream/video" alt="CCTV Annotated Stream">
 
-        <!-- Interactive SVG Overlay for 4-Point Calibration -->
-        <svg id="calibrationSvg" viewBox="0 0 1280 720">
-          <polygon id="calibPolygon" class="calib-poly" points="480,260 800,260 1120,680 160,680"></polygon>
-          
-          <!-- Anchor Handles -->
-          <circle id="p1" class="calib-handle" cx="480" cy="260" r="7" data-point="0"></circle>
-          <text id="p1Label" class="calib-label" x="492" y="255">P1 (TL)</text>
+        <svg id="calibrationSvg" viewBox="0 0 1280 720" preserveAspectRatio="none">
+          <polygon id="calibPolygon" class="calib-poly" points="705,260 1140,260 1255,680 655,680"></polygon>
 
-          <circle id="p2" class="calib-handle" cx="800" cy="260" r="7" data-point="1"></circle>
-          <text id="p2Label" class="calib-label" x="812" y="255">P2 (TR)</text>
-
-          <circle id="p3" class="calib-handle" cx="1120" cy="680" r="7" data-point="2"></circle>
-          <text id="p3Label" class="calib-label" x="1132" y="675">P3 (BR)</text>
-
-          <circle id="p4" class="calib-handle" cx="160" cy="680" r="7" data-point="3"></circle>
-          <text id="p4Label" class="calib-label" x="172" y="675">P4 (BL)</text>
+          <!-- Always-On Draggable Handles (transparent 18px hit grip + crisp vector dot) -->
+          <g id="grp1">
+            <rect id="lblBg1" class="calib-label-bg" x="717" y="240" width="68" height="20" rx="4"></rect>
+            <text id="p1Label" class="calib-label" x="723" y="254">P1 (TL)</text>
+            <circle id="p1" class="calib-handle" cx="705" cy="260" r="8"></circle>
+            <circle class="calib-hit" cx="705" cy="260" r="20" data-point="0"></circle>
+          </g>
+          <g id="grp2">
+            <rect id="lblBg2" class="calib-label-bg" x="1152" y="240" width="68" height="20" rx="4"></rect>
+            <text id="p2Label" class="calib-label" x="1158" y="254">P2 (TR)</text>
+            <circle id="p2" class="calib-handle" cx="1140" cy="260" r="8"></circle>
+            <circle class="calib-hit" cx="1140" cy="260" r="20" data-point="1"></circle>
+          </g>
+          <g id="grp3">
+            <rect id="lblBg3" class="calib-label-bg" x="1175" y="654" width="68" height="20" rx="4"></rect>
+            <text id="p3Label" class="calib-label" x="1181" y="668">P3 (BR)</text>
+            <circle id="p3" class="calib-handle" cx="1255" cy="680" r="8"></circle>
+            <circle class="calib-hit" cx="1255" cy="680" r="20" data-point="2"></circle>
+          </g>
+          <g id="grp4">
+            <rect id="lblBg4" class="calib-label-bg" x="667" y="654" width="68" height="20" rx="4"></rect>
+            <text id="p4Label" class="calib-label" x="673" y="668">P4 (BL)</text>
+            <circle id="p4" class="calib-handle" cx="655" cy="680" r="8"></circle>
+            <circle class="calib-hit" cx="655" cy="680" r="20" data-point="3"></circle>
+          </g>
         </svg>
+      </div>
 
-        <!-- Dynamic Calibration Controller Bar -->
-        <div class="calib-modal" id="calibModal">
-          <span style="font-size: 12px; font-weight: 700; color: var(--calibration-zone);">DRAG 4 CORNERS:</span>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-size: 11px; color: var(--text-muted);">Road Width (W):</label>
-            <input type="number" id="calibWidthInput" class="input-field" value="8.0" step="0.5" min="2" max="50">
-            <span style="font-size: 11px; color: var(--text-muted);">m</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-size: 11px; color: var(--text-muted);">Trap Length (L):</label>
-            <input type="number" id="calibLengthInput" class="input-field" value="35.0" step="1.0" min="5" max="200">
-            <span style="font-size: 11px; color: var(--text-muted);">m</span>
-          </div>
-          <button class="btn btn-primary" id="saveCalibrationBtn">Apply & Save</button>
-          <button class="btn" id="cancelCalibrationBtn">Cancel</button>
-        </div>
+      <!-- Always-available compact calibration controls -->
+      <div class="calib-toolbar">
+        <span class="calib-hint">✥ Drag corners P1–P4 on video</span>
+        <span style="color:#475569">|</span>
+        <label class="metric-label">W (m): <input type="number" id="calibWidthInput" class="input-field" value="10.5" step="0.5" min="1"></label>
+        <label class="metric-label">L (m): <input type="number" id="calibLengthInput" class="input-field" value="28.0" step="1" min="2"></label>
+        <button class="btn" id="resetCalibBtn" style="padding:4px 10px;">Reset Zone</button>
+        <span id="calibCoordStatus" class="mono" style="font-size:11px; color:#94A3B8;"></span>
+        <span id="saveToast" class="save-toast">✓ Saved</span>
       </div>
     </section>
 
-    <!-- Zone C: Live Violation Audit Feed -->
-    <section class="violation-audit-panel">
-      <div class="panel-header">
-        <div class="panel-title">
-          <span>Speed Violations</span>
-          <span class="violation-badge mono" id="violationCountBadge">0</span>
+    <!-- Zone C: Clear 2-Tab Audit & Logs Panel -->
+    <aside class="audit-panel">
+      <div class="panel-tabs">
+        <div class="tab-group">
+          <button class="tab-btn active" data-tab="violationsTab">
+            Violations <span class="badge badge-red" id="violationCountBadge">0</span>
+          </button>
+          <button class="tab-btn" data-tab="liveLogTab">
+            Live Log <span class="badge" id="logCountBadge">0</span>
+          </button>
         </div>
         <button class="btn" id="clearAuditBtn" style="padding: 4px 8px; font-size: 11px;">Clear</button>
       </div>
 
-      <div class="violation-stack" id="violationStack">
-        <div class="empty-state" id="emptyState">
-          <div class="empty-icon">🛡️</div>
-          <div>No speed violations recorded.</div>
-          <div style="font-size: 11px;">Vehicles exceeding the limit will trigger instant alerts here.</div>
+      <!-- Tab 1: Violations -->
+      <div class="tab-content active" id="violationsTab">
+        <div class="violation-stack" id="violationStack">
+          <div class="empty-state" id="emptyState">
+            <div style="font-size: 28px;">🛡️</div>
+            <div>No speed violations recorded yet.</div>
+            <div style="font-size: 11px;">Vehicles inside P1–P4 exceeding the limit appear here with snapshot evidence.</div>
+          </div>
         </div>
       </div>
-    </section>
 
+      <!-- Tab 2: Live Vehicle Speed Log Table -->
+      <div class="tab-content" id="liveLogTab">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Vehicle</th>
+              <th>Speed</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="liveLogBody">
+            <tr><td colspan="4" style="text-align:center; color:#64748B; padding:24px;">Waiting for vehicles inside Speed Zone...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </aside>
   </main>
 
-  <script>
-    // State & Config
-    let calibPoints = [
-      [480, 260],
-      [800, 260],
-      [1120, 680],
-      [160, 680]
-    ];
-    let isCalibrating = false;
-    let draggedHandle = null;
-    let violationCount = 0;
+  <div class="lightbox" id="lightbox" onclick="this.classList.remove('open')">
+    <img id="lightboxImg" src="" alt="Zoomed Evidence">
+  </div>
 
-    const recalibrateBtn = document.getElementById("recalibrateBtn");
-    const calibModal = document.getElementById("calibModal");
-    const saveCalibrationBtn = document.getElementById("saveCalibrationBtn");
-    const cancelCalibrationBtn = document.getElementById("cancelCalibrationBtn");
+  <script>
+    let calibPoints = [[705, 260], [1140, 260], [1255, 680], [655, 680]];
+    let draggedPointIdx = null;
+    let violationCount = 0;
+    let logCount = 0;
+
     const calibSvg = document.getElementById("calibrationSvg");
     const calibPoly = document.getElementById("calibPolygon");
+    const calibWidthInput = document.getElementById("calibWidthInput");
+    const calibLengthInput = document.getElementById("calibLengthInput");
+    const resetCalibBtn = document.getElementById("resetCalibBtn");
+    const saveToast = document.getElementById("saveToast");
+    const calibCoordStatus = document.getElementById("calibCoordStatus");
     const speedLimitInput = document.getElementById("speedLimitInput");
+    const cameraPresetSelect = document.getElementById("cameraPresetSelect");
     const violationStack = document.getElementById("violationStack");
     const emptyState = document.getElementById("emptyState");
     const violationCountBadge = document.getElementById("violationCountBadge");
+    const logCountBadge = document.getElementById("logCountBadge");
+    const liveLogBody = document.getElementById("liveLogBody");
     const clearAuditBtn = document.getElementById("clearAuditBtn");
-    const exportAuditBtn = document.getElementById("exportAuditBtn");
     const fpsReadout = document.getElementById("fpsReadout");
     const deltaReadout = document.getElementById("deltaReadout");
     const streamStatus = document.getElementById("streamStatus");
     const statusDot = document.getElementById("statusDot");
 
-    // Fetch initial calibration from backend
-    async function loadCalibration() {
-      try {
-        const res = await fetch("/api/calibration");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.src_points && data.src_points.length === 4) {
-            calibPoints = data.src_points;
-            document.getElementById("calibWidthInput").value = data.real_width_m || 8.0;
-            document.getElementById("calibLengthInput").value = data.real_length_m || 35.0;
-            updateSvgPolygon();
-          }
-        }
-      } catch (err) {
-        console.warn("Could not load calibration:", err);
-      }
+    // Tab switching
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    function showSavedToast() {
+      saveToast.classList.add("show");
+      setTimeout(() => saveToast.classList.remove("show"), 1600);
     }
 
-    // Fetch initial settings
-    async function loadSettings() {
-      try {
-        const res = await fetch("/api/settings");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.speed_limit_kmh) {
-            speedLimitInput.value = data.speed_limit_kmh;
-          }
-        }
-      } catch (err) {
-        console.warn("Could not load settings:", err);
-      }
-    }
-
-    // Update SVG display for 4 points
     function updateSvgPolygon() {
-      const ptsStr = calibPoints.map(p => `${p[0]},${p[1]}`).join(" ");
-      calibPoly.setAttribute("points", ptsStr);
-
+      calibPoly.setAttribute("points", calibPoints.map(p => `${p[0]},${p[1]}`).join(" "));
       for (let i = 0; i < 4; i++) {
+        const [x, y] = calibPoints[i];
         const handle = document.getElementById(`p${i + 1}`);
+        const hit = calibSvg.querySelector(`.calib-hit[data-point="${i}"]`);
         const label = document.getElementById(`p${i + 1}Label`);
-        if (handle) {
-          handle.setAttribute("cx", calibPoints[i][0]);
-          handle.setAttribute("cy", calibPoints[i][1]);
-        }
-        if (label) {
-          label.setAttribute("x", calibPoints[i][0] + 12);
-          label.setAttribute("y", calibPoints[i][1] - 5);
-        }
+        const bg = document.getElementById(`lblBg${i + 1}`);
+        if (handle) { handle.setAttribute("cx", x); handle.setAttribute("cy", y); }
+        if (hit) { hit.setAttribute("cx", x); hit.setAttribute("cy", y); }
+        const lx = x > 1160 ? x - 80 : x + 12;
+        const ly = y < 40 ? y + 24 : y - 10;
+        if (label) { label.setAttribute("x", lx); label.setAttribute("y", ly); }
+        if (bg) { bg.setAttribute("x", lx - 6); bg.setAttribute("y", ly - 14); }
       }
     }
 
-    // Toggle Calibration Mode
-    recalibrateBtn.addEventListener("click", () => {
-      isCalibrating = !isCalibrating;
-      if (isCalibrating) {
-        recalibrateBtn.classList.add("btn-active");
-        calibModal.classList.add("visible");
-        calibSvg.classList.add("interactive");
-      } else {
-        recalibrateBtn.classList.remove("btn-active");
-        calibModal.classList.remove("visible");
-        calibSvg.classList.remove("interactive");
-      }
-    });
-
-    cancelCalibrationBtn.addEventListener("click", () => {
-      isCalibrating = false;
-      recalibrateBtn.classList.remove("btn-active");
-      calibModal.classList.remove("visible");
-      calibSvg.classList.remove("interactive");
-      loadCalibration();
-    });
-
-    saveCalibrationBtn.addEventListener("click", async () => {
-      const realWidth = parseFloat(document.getElementById("calibWidthInput").value) || 8.0;
-      const realLength = parseFloat(document.getElementById("calibLengthInput").value) || 35.0;
-
+    async function saveCalibration() {
+      const realWidth = parseFloat(calibWidthInput.value) || 10.5;
+      const realLength = parseFloat(calibLengthInput.value) || 28.0;
       try {
         const res = await fetch("/api/calibration", {
           method: "POST",
@@ -718,18 +630,112 @@
             real_length_m: realLength,
           }),
         });
-        if (res.ok) {
-          isCalibrating = false;
-          recalibrateBtn.classList.remove("btn-active");
-          calibModal.classList.remove("visible");
-          calibSvg.classList.remove("interactive");
-        }
+        if (res.ok) showSavedToast();
       } catch (err) {
-        alert("Failed to save calibration: " + err.message);
+        console.warn("Calibration save failed:", err);
+      }
+    }
+
+    async function loadCalibration() {
+      try {
+        const res = await fetch("/api/calibration");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.src_points && data.src_points.length === 4) {
+            calibPoints = data.src_points;
+            calibWidthInput.value = data.real_width_m;
+            calibLengthInput.value = data.real_length_m;
+            updateSvgPolygon();
+          }
+        }
+      } catch (_) {}
+    }
+
+    async function loadCamerasAndSettings() {
+      try {
+        const [camRes, setRes] = await Promise.all([fetch("/api/cameras"), fetch("/api/settings")]);
+        if (camRes.ok) {
+          const camData = await camRes.json();
+          if (camData.active_preset_id) cameraPresetSelect.value = camData.active_preset_id;
+        }
+        if (setRes.ok) {
+          const s = await setRes.json();
+          if (s.speed_limit_kmh) speedLimitInput.value = s.speed_limit_kmh;
+        }
+      } catch (_) {}
+    }
+
+    // 1:1 Pixel-Locked SVG Corner Dragging (Always On)
+    function getSvgCoords(evt) {
+      const rect = calibSvg.getBoundingClientRect();
+      const x = Math.round(Math.max(0, Math.min(1280, ((evt.clientX - rect.left) / rect.width) * 1280)));
+      const y = Math.round(Math.max(0, Math.min(720, ((evt.clientY - rect.top) / rect.height) * 720)));
+      return [x, y];
+    }
+
+    calibSvg.addEventListener("mousedown", (e) => {
+      if (e.target.classList.contains("calib-hit")) {
+        draggedPointIdx = parseInt(e.target.dataset.point, 10);
+        e.target.classList.add("dragging");
+        document.getElementById(`p${draggedPointIdx + 1}`)?.classList.add("dragging");
       }
     });
 
-    // Speed limit dynamic change
+    window.addEventListener("mousemove", (e) => {
+      if (draggedPointIdx === null) return;
+      const coords = getSvgCoords(e);
+      calibPoints[draggedPointIdx] = coords;
+      calibCoordStatus.textContent = `P${draggedPointIdx + 1}: (${coords[0]}, ${coords[1]})`;
+      updateSvgPolygon();
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (draggedPointIdx !== null) {
+        calibSvg.querySelector(`.calib-hit[data-point="${draggedPointIdx}"]`)?.classList.remove("dragging");
+        document.getElementById(`p${draggedPointIdx + 1}`)?.classList.remove("dragging");
+        draggedPointIdx = null;
+        calibCoordStatus.textContent = "";
+        saveCalibration();
+      }
+    });
+
+    calibWidthInput.addEventListener("change", saveCalibration);
+    calibLengthInput.addEventListener("change", saveCalibration);
+
+    resetCalibBtn.addEventListener("click", async () => {
+      const res = await fetch("/api/calibration/reset", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        calibPoints = data.src_points;
+        calibWidthInput.value = data.real_width_m;
+        calibLengthInput.value = data.real_length_m;
+        updateSvgPolygon();
+        showSavedToast();
+      }
+    });
+
+    // Camera Preset Switcher
+    cameraPresetSelect.addEventListener("change", async () => {
+      const presetId = cameraPresetSelect.value;
+      const res = await fetch("/api/camera", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preset_id: presetId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        calibPoints = data.calibration.src_points;
+        calibWidthInput.value = data.calibration.real_width_m;
+        calibLengthInput.value = data.calibration.real_length_m;
+        speedLimitInput.value = data.speed_limit_kmh;
+        updateSvgPolygon();
+        liveLogBody.innerHTML = "";
+        logCount = 0;
+        logCountBadge.textContent = "0";
+        showSavedToast();
+      }
+    });
+
     speedLimitInput.addEventListener("change", async () => {
       const val = parseFloat(speedLimitInput.value);
       if (val && val > 0) {
@@ -738,131 +744,92 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ speed_limit_kmh: val }),
         });
+        showSavedToast();
       }
     });
 
-    // Drag and drop interaction on SVG
-    function getSvgCoordinates(evt) {
-      const pt = calibSvg.createSVGPoint();
-      pt.x = evt.clientX;
-      pt.y = evt.clientY;
-      const svgP = pt.matrixTransform(calibSvg.getScreenCTM().inverse());
-      return {
-        x: Math.round(Math.max(0, Math.min(1280, svgP.x))),
-        y: Math.round(Math.max(0, Math.min(720, svgP.y))),
-      };
-    }
-
-    calibSvg.addEventListener("mousedown", (e) => {
-      if (!isCalibrating) return;
-      if (e.target.classList.contains("calib-handle")) {
-        draggedHandle = parseInt(e.target.dataset.point, 10);
-        e.target.classList.add("dragging");
-      }
-    });
-
-    window.addEventListener("mousemove", (e) => {
-      if (draggedHandle === null || !isCalibrating) return;
-      const coords = getSvgCoordinates(e);
-      calibPoints[draggedHandle] = [coords.x, coords.y];
-      updateSvgPolygon();
-    });
-
-    window.addEventListener("mouseup", () => {
-      if (draggedHandle !== null) {
-        const h = document.getElementById(`p${draggedHandle + 1}`);
-        if (h) h.classList.remove("dragging");
-        draggedHandle = null;
-      }
-    });
-
-    // Add violation card to UI
-    function addViolationCard(violation) {
-      if (emptyState) {
-        emptyState.style.display = "none";
-      }
-
+    function addViolationCard(v) {
+      if (emptyState) emptyState.style.display = "none";
       violationCount++;
       violationCountBadge.textContent = violationCount;
 
-      const excess = Math.max(0, violation.speed_kmh - violation.limit_kmh).toFixed(1);
+      const excess = Math.max(0, v.speed_kmh - v.limit_kmh).toFixed(1);
       const card = document.createElement("div");
       card.className = "violation-card";
-
       card.innerHTML = `
-        <div class="card-crop-container">
-          <img class="card-crop-img" src="${violation.snapshot_url}" alt="Violation Snapshot" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'90\\' fill=\\'%23161E2E\\'><rect width=\\'100\\' height=\\'90\\'/><text x=\\'50%\\' y=\\'50%\\' fill=\\'%2394A3B8\\' font-size=\\'10\\' text-anchor=\\'middle\\'>EVIDENCE</text></svg>'">
+        <div class="card-crop-container" onclick="document.getElementById('lightboxImg').src='${v.snapshot_url}';document.getElementById('lightbox').classList.add('open')">
+          <img src="${v.snapshot_url}" alt="Violation Snapshot">
         </div>
         <div class="card-details">
           <div class="card-top">
-            <span class="card-track-id mono">ID #${String(violation.track_id).padStart(3, '0')}</span>
-            <span class="card-vehicle-class mono">${violation.vehicle_class}</span>
+            <span class="card-track-id mono">Vehicle #${String(v.track_id).padStart(3, '0')}</span>
+            <span class="card-vehicle-class mono">${v.vehicle_class}</span>
           </div>
-          <div class="card-speed-row">
-            <span class="card-measured-speed mono">${violation.speed_kmh} <span style="font-size: 12px;">km/h</span></span>
-            <span class="card-speed-limit mono">Limit: ${violation.limit_kmh}</span>
+          <div>
+            <span class="card-measured-speed mono">${v.speed_kmh} <span style="font-size:11px;">km/h</span></span>
+            <span class="card-speed-limit mono">/ ${v.limit_kmh} limit</span>
           </div>
           <div class="card-bottom">
-            <span class="mono">${violation.timestamp || new Date().toLocaleTimeString()}</span>
+            <span class="mono" style="color:#94A3B8;">${v.timestamp || ''}</span>
             <span class="excess-badge mono">+${excess} km/h OVER</span>
           </div>
         </div>
       `;
-
       violationStack.insertBefore(card, violationStack.firstChild);
+      while (violationStack.children.length > 40) {
+        violationStack.removeChild(violationStack.lastChild);
+      }
     }
 
-    // Clear and Export handlers
+    function addLogRow(entry) {
+      if (logCount === 0) liveLogBody.innerHTML = "";
+      logCount++;
+      logCountBadge.textContent = logCount;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="mono" style="color:#94A3B8;">${entry.timestamp}</td>
+        <td class="mono"><strong>#${String(entry.track_id).padStart(3, '0')}</strong> ${entry.vehicle_class}</td>
+        <td class="mono"><strong>${entry.speed_kmh}</strong> km/h</td>
+        <td><span class="status-pill pill-${entry.status}">${entry.status === 'NOMINAL' ? 'OK' : entry.status}</span></td>
+      `;
+      liveLogBody.insertBefore(tr, liveLogBody.firstChild);
+      while (liveLogBody.children.length > 100) {
+        liveLogBody.removeChild(liveLogBody.lastChild);
+      }
+    }
+
     clearAuditBtn.addEventListener("click", () => {
       violationStack.innerHTML = "";
       violationStack.appendChild(emptyState);
       emptyState.style.display = "flex";
       violationCount = 0;
       violationCountBadge.textContent = "0";
+      liveLogBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748B; padding:24px;">Log cleared — waiting for vehicles...</td></tr>';
+      logCount = 0;
+      logCountBadge.textContent = "0";
     });
 
-    exportAuditBtn.addEventListener("click", async () => {
-      try {
-        const res = await fetch("/api/violations");
-        if (res.ok) {
-          const list = await res.json();
-          const blob = new Blob([JSON.stringify(list, null, 2)], { type: "application/json" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `argus_violations_${Date.now()}.json`;
-          a.click();
-        }
-      } catch (e) {
-        alert("Export failed: " + e.message);
-      }
-    });
-
-    // Real-time WebSocket connection
-    let ws = null;
     function connectWebSocket() {
       const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-      ws = new WebSocket(`${proto}//${window.location.host}/ws`);
-
+      const ws = new WebSocket(`${proto}//${window.location.host}/ws`);
       ws.onopen = () => {
         statusDot.style.backgroundColor = "var(--status-nominal)";
         streamStatus.textContent = "LIVE";
       };
-
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
           if (msg.type === "TELEMETRY") {
-            fpsReadout.textContent = `${msg.payload.fps} FPS`;
+            fpsReadout.textContent = msg.payload.fps;
             deltaReadout.textContent = `${msg.payload.delta_t_ms} ms`;
-          } else if (msg.type === "VIOLATION" || msg.speed_kmh !== undefined) {
-            addViolationCard(msg.payload || msg);
+          } else if (msg.type === "VIOLATION") {
+            addViolationCard(msg.payload);
+          } else if (msg.type === "TRACK_LOG") {
+            addLogRow(msg.payload);
           }
-        } catch (err) {
-          console.error("WS Parse error:", err);
-        }
+        } catch (_) {}
       };
-
       ws.onclose = () => {
         statusDot.style.backgroundColor = "var(--status-warning)";
         streamStatus.textContent = "RECONNECTING";
@@ -870,22 +837,20 @@
       };
     }
 
-    // Fallback polling for telemetry stats
     setInterval(async () => {
       try {
         const res = await fetch("/api/telemetry");
         if (res.ok) {
           const t = await res.json();
-          fpsReadout.textContent = `${t.fps} FPS`;
+          fpsReadout.textContent = t.fps;
           deltaReadout.textContent = `${t.delta_t_ms} ms`;
           streamStatus.textContent = t.stream_status;
         }
       } catch (_) {}
     }, 1500);
 
-    // Initialization
     loadCalibration();
-    loadSettings();
+    loadCamerasAndSettings();
     connectWebSocket();
   </script>
 </body>

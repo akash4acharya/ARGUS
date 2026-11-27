@@ -1,14 +1,17 @@
 import os
+import io
+import csv
 import cv2
 import time
 import yaml
 import asyncio
 import threading
+from collections import deque
 from typing import List, Dict, Any, Optional
 import numpy as np
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
-from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
+from fastapi.responses import StreamingResponse, FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
@@ -18,7 +21,7 @@ from core.tracker import DeepSORTVehicleTracker
 from core.homography_speed import HomographySpeedEngine
 from core.hud_renderer import ExceptionFirstHudRenderer
 from backend.database import init_db
-from backend.models import CalibrationSchema, SettingsSchema, TelemetryStatusSchema
+from backend.models import CalibrationSchema, SettingsSchema, TelemetryStatusSchema, CameraSwitchSchema
 from backend.worker import AsyncViolationWorker, ViolationEvent
 
 
@@ -45,7 +48,9 @@ DET_CONF = settings.get("detector", {})
 TRACK_CONF = settings.get("tracker", {})
 STORAGE_CONF = settings.get("storage", {})
 
-CAMERA_SOURCE = CAMERA_CONF.get("source", 0)
+CAMERA_SOURCE = os.getenv("CCTV_SOURCE", CAMERA_CONF.get("source", 0))
+if isinstance(CAMERA_SOURCE, str) and CAMERA_SOURCE.isdigit():
+    CAMERA_SOURCE = int(CAMERA_SOURCE)
 CAMERA_WIDTH = CAMERA_CONF.get("width", 1280)
 CAMERA_HEIGHT = CAMERA_CONF.get("height", 720)
 SPEED_LIMIT_KMH = float(CAMERA_CONF.get("speed_limit_kmh", 40.0))
@@ -58,8 +63,45 @@ REAL_WIDTH_M = float(CALIB_CONF.get("real_width_m", 8.0))
 REAL_LENGTH_M = float(CALIB_CONF.get("real_length_m", 35.0))
 EVIDENCE_DIR = STORAGE_CONF.get("evidence_dir", "evidence_crops")
 
+CAMERA_PRESETS: Dict[str, Dict[str, Any]] = {
+    "highway_expressway": {
+        "id": "highway_expressway",
+        "label": "6-Lane Expressway (MVI_40191)",
+        "source": "data/demo/highway_expressway.mp4",
+        "src_points": [[705.0, 260.0], [1140.0, 260.0], [1255.0, 680.0], [655.0, 680.0]],
+        "real_width_m": 10.5,
+        "real_length_m": 28.0,
+        "speed_limit_kmh": 50.0,
+    },
+    "urban_arterial": {
+        "id": "urban_arterial",
+        "label": "8-Lane Urban Intersection (MVI_40712)",
+        "source": "data/demo/urban_arterial.mp4",
+        "src_points": [[390.0, 250.0], [630.0, 250.0], [560.0, 680.0], [90.0, 680.0]],
+        "real_width_m": 11.0,
+        "real_length_m": 32.0,
+        "speed_limit_kmh": 50.0,
+    },
+    "overhead_closeup": {
+        "id": "overhead_closeup",
+        "label": "Close-Up Overhead (Sample)",
+        "source": "data/smoke_test/sample_traffic.mp4",
+        "src_points": [[480.0, 260.0], [800.0, 260.0], [1120.0, 680.0], [160.0, 680.0]],
+        "real_width_m": 8.0,
+        "real_length_m": 22.0,
+        "speed_limit_kmh": 40.0,
+    },
+}
+
+active_preset_id = "highway_expressway"
+for _pid, _p in CAMERA_PRESETS.items():
+    if str(CAMERA_SOURCE) == str(_p["source"]):
+        active_preset_id = _pid
+        break
+
 # Global pipeline instances
 stream_reader: Optional[UniversalCCTVStream] = None
+stream_lock = threading.Lock()
 detector: Optional[YOLOv8VehicleDetector] = None
 tracker: Optional[DeepSORTVehicleTracker] = None
 homography_engine: Optional[HomographySpeedEngine] = None
@@ -69,6 +111,9 @@ violation_worker: Optional[AsyncViolationWorker] = None
 # Thread-safe frame and telemetry storage for MJPEG & WebSockets
 latest_annotated_jpeg: Optional[bytes] = None
 jpeg_lock = threading.Lock()
+recent_logs: deque = deque(maxlen=150)
+log_lock = threading.Lock()
+last_log_emit: Dict[int, float] = {}
 
 telemetry_data = {
     "fps": 0.0,
@@ -113,21 +158,23 @@ def vision_processing_loop(loop: asyncio.AbstractEventLoop) -> None:
     """
     global latest_annotated_jpeg, vision_thread_running
 
-    prev_frame_time = time.monotonic()
+    prev_frame_time = 0.0
+    last_frame_id = -1
     frame_count = 0
     fps_start_time = time.monotonic()
-    fps_estimate = 30.0
+    fps_estimate = 25.0
 
     print("[INFO] Vision processing loop started.")
 
     while vision_thread_running:
         loop_start = time.monotonic()
-        frame_obj = stream_reader.get_latest()
+        with stream_lock:
+            reader = stream_reader
+        frame_obj = reader.get_latest() if reader is not None else None
 
         if frame_obj is None or frame_obj.image is None:
             with telemetry_lock:
                 telemetry_data["stream_status"] = "RECONNECTING"
-            # Generate a standby frame with diagnostic banner
             standby = np.zeros((CAMERA_HEIGHT, CAMERA_WIDTH, 3), dtype=np.uint8)
             cv2.putText(
                 standby,
@@ -146,11 +193,17 @@ def vision_processing_loop(loop: asyncio.AbstractEventLoop) -> None:
             time.sleep(0.04)
             continue
 
+        # Deduplicate identical video frames so repeated frames never compress delta_t
+        if frame_obj.frame_id == last_frame_id:
+            time.sleep(0.005)
+            continue
+        last_frame_id = frame_obj.frame_id
+
         raw_bgr = frame_obj.image.copy()
         capture_time = frame_obj.capture_time
 
-        # Calculate time delta from arrival time
-        delta_t_ms = (capture_time - prev_frame_time) * 1000.0 if prev_frame_time > 0 else 33.3
+        # Calculate time delta from deterministic/monotonic frame stamp
+        delta_t_ms = (capture_time - prev_frame_time) * 1000.0 if prev_frame_time > 0 else 40.0
         prev_frame_time = capture_time
 
         # 1. Detection
@@ -159,17 +212,43 @@ def vision_processing_loop(loop: asyncio.AbstractEventLoop) -> None:
         # 2. Tracking
         tracked_vehicles = tracker.update(detections, raw_bgr)
 
-        # 3. Speed Calculation
+        # 3. Speed Calculation & Live Vehicle Log
         speed_map = {}
+        now_wall = time.monotonic()
+        active_limit = hud_renderer.speed_limit_kmh
+        cam_label = CAMERA_PRESETS.get(active_preset_id, {}).get("label", str(CAMERA_SOURCE))
+
         for vehicle in tracked_vehicles:
             spd = homography_engine.compute_speed_kmh(
                 vehicle.track_id, vehicle.tire_point, capture_time
             )
             speed_map[vehicle.track_id] = spd
 
+            if spd is not None:
+                status_str = "VIOLATION" if spd >= active_limit else ("WARNING" if spd >= active_limit * 0.85 else "NOMINAL")
+                prev_emit = last_log_emit.get(vehicle.track_id, 0.0)
+                if (now_wall - prev_emit) >= 0.75 or status_str == "VIOLATION":
+                    if status_str != "VIOLATION" or (now_wall - prev_emit) >= 0.75:
+                        last_log_emit[vehicle.track_id] = now_wall
+                        log_entry = {
+                            "timestamp": time.strftime("%H:%M:%S"),
+                            "camera": cam_label,
+                            "track_id": vehicle.track_id,
+                            "vehicle_class": vehicle.class_name,
+                            "speed_kmh": round(spd, 1),
+                            "limit_kmh": round(active_limit, 1),
+                            "status": status_str,
+                        }
+                        with log_lock:
+                            recent_logs.appendleft(log_entry)
+                        if active_connections:
+                            loop.call_soon_threadsafe(
+                                asyncio.create_task,
+                                broadcast_message({"type": "TRACK_LOG", "payload": log_entry}),
+                            )
+
             # 4. Check for Speeding Violation
-            if spd is not None and spd >= homography_engine.speed_limit_kmh if hasattr(homography_engine, "speed_limit_kmh") else (spd is not None and spd >= hud_renderer.speed_limit_kmh):
-                # Crop vehicle for evidence
+            if spd is not None and spd >= active_limit:
                 x1, y1, x2, y2 = [int(v) for v in vehicle.bbox]
                 h_img, w_img = raw_bgr.shape[:2]
                 pad = 12
@@ -185,17 +264,18 @@ def vision_processing_loop(loop: asyncio.AbstractEventLoop) -> None:
                     track_id=vehicle.track_id,
                     vehicle_class=vehicle.class_name,
                     measured_speed_kmh=spd,
-                    speed_limit_kmh=hud_renderer.speed_limit_kmh,
+                    speed_limit_kmh=active_limit,
                     vehicle_crop_bgr=crop.copy(),
                 )
                 violation_worker.enqueue_from_vision_thread(loop, event)
 
-        # 5. Render HUD Overlay
+        # 5. Render HUD Overlay (vector SVG handles Speed Zone overlay in dashboard)
         annotated = hud_renderer.render_overlay(
             frame=raw_bgr,
             src_points=homography_engine.src_polygon.tolist(),
             vehicles=tracked_vehicles,
             speed_map=speed_map,
+            draw_zone=False,
         )
 
         # Compress to JPEG for Web MJPEG Stream
@@ -255,6 +335,7 @@ async def lifespan(app: FastAPI):
         nms_max_overlap=float(TRACK_CONF.get("nms_max_overlap", 1.0)),
         max_cosine_distance=float(TRACK_CONF.get("max_cosine_distance", 0.3)),
         nn_budget=int(TRACK_CONF.get("nn_budget", 100)),
+        use_embedder=bool(TRACK_CONF.get("use_embedder", True)),
     )
 
     homography_engine = HomographySpeedEngine(
@@ -302,6 +383,12 @@ os.makedirs(EVIDENCE_ABS_DIR, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/evidence", StaticFiles(directory=EVIDENCE_ABS_DIR), name="evidence")
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring."""
+    return {"status": "healthy", "service": "ARGUS CCTV Speed Monitor"}
 
 
 @app.get("/")
@@ -353,6 +440,12 @@ async def websocket_endpoint(websocket: WebSocket):
         if violation_worker:
             for item in reversed(violation_worker.recent_violations):
                 await websocket.send_json({"type": "VIOLATION", "payload": item})
+
+        # Send recent vehicle telemetry logs
+        with log_lock:
+            hist_logs = list(recent_logs)[:40]
+        for entry in reversed(hist_logs):
+            await websocket.send_json({"type": "TRACK_LOG", "payload": entry})
 
         while True:
             # Keep socket open and handle incoming ping or client messages
@@ -446,6 +539,128 @@ async def get_violations():
     if violation_worker:
         return violation_worker.recent_violations
     return []
+
+
+@app.get("/api/cameras")
+async def list_cameras():
+    """Returns available demo camera presets and the currently active preset ID."""
+    return {
+        "active_preset_id": active_preset_id,
+        "presets": [
+            {
+                "id": p["id"],
+                "label": p["label"],
+                "source": p["source"],
+                "exists": os.path.exists(str(p["source"])),
+            }
+            for p in CAMERA_PRESETS.values()
+        ],
+    }
+
+
+@app.post("/api/camera")
+async def switch_camera(req: CameraSwitchSchema):
+    """Hot-swaps the active video source and loads its calibrated Speed Zone."""
+    global stream_reader, CAMERA_SOURCE, SPEED_LIMIT_KMH, active_preset_id
+    preset = CAMERA_PRESETS.get(req.preset_id)
+    if not preset:
+        raise HTTPException(status_code=404, detail=f"Unknown preset '{req.preset_id}'")
+    if not os.path.exists(str(preset["source"])):
+        raise HTTPException(status_code=404, detail=f"Video file missing: {preset['source']}")
+
+    new_reader = UniversalCCTVStream(
+        source_url=preset["source"],
+        target_width=CAMERA_WIDTH,
+        target_height=CAMERA_HEIGHT,
+    ).start()
+
+    with stream_lock:
+        old_reader = stream_reader
+        stream_reader = new_reader
+    if old_reader:
+        old_reader.stop()
+
+    active_preset_id = req.preset_id
+    CAMERA_SOURCE = preset["source"]
+    SPEED_LIMIT_KMH = float(preset["speed_limit_kmh"])
+
+    if homography_engine:
+        homography_engine.update_calibration(
+            src_points=preset["src_points"],
+            real_width_m=preset["real_width_m"],
+            real_length_m=preset["real_length_m"],
+        )
+    if hud_renderer:
+        hud_renderer.set_speed_limit(SPEED_LIMIT_KMH)
+    if tracker:
+        tracker.fallback_tracker.tracks.clear()
+    with log_lock:
+        recent_logs.clear()
+        last_log_emit.clear()
+    with telemetry_lock:
+        telemetry_data["camera_source"] = str(CAMERA_SOURCE)
+        telemetry_data["speed_limit_kmh"] = SPEED_LIMIT_KMH
+
+    return {
+        "status": "success",
+        "active_preset_id": active_preset_id,
+        "calibration": {
+            "src_points": preset["src_points"],
+            "real_width_m": preset["real_width_m"],
+            "real_length_m": preset["real_length_m"],
+        },
+        "speed_limit_kmh": SPEED_LIMIT_KMH,
+    }
+
+
+@app.post("/api/calibration/reset")
+async def reset_calibration():
+    """Resets the Speed Zone polygon to the active camera preset's default."""
+    preset = CAMERA_PRESETS.get(active_preset_id, CAMERA_PRESETS["highway_expressway"])
+    if homography_engine:
+        homography_engine.update_calibration(
+            src_points=preset["src_points"],
+            real_width_m=preset["real_width_m"],
+            real_length_m=preset["real_length_m"],
+        )
+    return {
+        "status": "success",
+        "src_points": preset["src_points"],
+        "real_width_m": preset["real_width_m"],
+        "real_length_m": preset["real_length_m"],
+    }
+
+
+@app.get("/api/logs")
+async def get_live_logs():
+    """Returns recent structured per-vehicle telemetry logs."""
+    with log_lock:
+        return list(recent_logs)
+
+
+@app.get("/api/logs/export.csv")
+async def export_logs_csv():
+    """Downloads the structured telemetry and violation log as a clean CSV file."""
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Timestamp", "Camera", "Track_ID", "Vehicle_Class", "Speed_kmh", "Limit_kmh", "Status"])
+    with log_lock:
+        rows = list(recent_logs)
+    for r in rows:
+        writer.writerow([
+            r.get("timestamp", ""),
+            r.get("camera", ""),
+            f"#{int(r.get('track_id', 0)):03d}",
+            r.get("vehicle_class", ""),
+            r.get("speed_kmh", ""),
+            r.get("limit_kmh", ""),
+            r.get("status", ""),
+        ])
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=argus_speed_log.csv"},
+    )
 
 
 if __name__ == "__main__":
